@@ -1,0 +1,226 @@
+import java.awt.*;
+import java.awt.event.*;
+import java.awt.image.*;
+import javax.imageio.*;
+import javax.swing.*;
+import java.io.*;
+
+public class Football extends JFrame implements KeyListener {
+    private int WIDTH_DEFAULT = 1279, HEIGHT_DEFAULT = 720;
+    private int WIDTH_MAX = 1920, HEIGHT_MAX = 1081;
+    // private int screenHeight = getHeight() - 50;
+    // private int screenWidth = getWidth() - 50;
+    Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+    private int blockX = 50;
+    private int blockY = 50;
+    private final int BLOCK_SIZE = 50;
+    private BufferedImage backgroundImage;
+    private BufferedImage playerRightImage;
+    private BufferedImage playerLeftImage;
+    private boolean facingRight = true;
+    private int dx = 0;
+    private int dy = 0;
+
+    // private int score = 0;
+
+    private BufferedImage offscreenBuffer;
+    private Graphics offscreenGraphics;
+
+    private long lastFpsTime = 0;
+    private int fps = 0;
+    private int fpsCounter = 0;
+
+    public Football() {
+        setTitle("american football!!");
+        setSize(WIDTH_DEFAULT, HEIGHT_DEFAULT);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        try {
+            backgroundImage = ImageIO.read(new File("resources/sprites/old/carterFinley1279x720.png"));
+            playerRightImage = ImageIO.read(new File("resources/sprites/old/rsz_playerRight.png"));
+            playerLeftImage = ImageIO.read(new File("resources/sprites/old/rsz_playerLeft.png"));
+        } catch (IOException e) {
+            System.out.println("Error loading images.");
+        }
+
+        JPanel panel = new JPanel() {
+
+            @Override
+            public void paintComponent(Graphics g) {
+                super.paintComponent(g);
+
+                // Output the FPS count
+                g.setColor(Color.WHITE);
+                g.drawString("FPS: " + fps, 10, 20);
+
+                // Create the off-screen buffer if necessary
+                if (offscreenBuffer == null) {
+                    offscreenBuffer = new BufferedImage(getWidth(),
+                            getHeight(), BufferedImage.TYPE_INT_ARGB);
+                    offscreenGraphics = offscreenBuffer.getGraphics();
+                }
+
+                // Clear the off-screen buffer
+                offscreenGraphics.clearRect(0, 0, getWidth(), getHeight());
+
+                // Draw the background to the off-screen buffer
+                offscreenGraphics.drawImage(backgroundImage, 0, 0, null);
+
+                // Draw the oval to the off-screen buffer
+                // int ovalWidth = 5 * BLOCK_SIZE;
+                // int ovalHeight = 5 * BLOCK_SIZE;
+                // int ovalX = blockX + (facingRight ? BLOCK_SIZE : -ovalWidth);
+                // int ovalY = blockY + BLOCK_SIZE / 2 - ovalHeight / 2;
+                // offscreenGraphics.drawOval(ovalX, ovalY, ovalWidth, ovalHeight);
+
+                // Draw the block to the off-screen buffer
+                if (facingRight) {
+                    offscreenGraphics.drawImage(playerRightImage, blockX, blockY, null);
+                } else {
+                    offscreenGraphics.drawImage(playerLeftImage, blockX, blockY, null);
+                }
+
+                // Draw the off-screen buffer to the screen
+                g.drawImage(offscreenBuffer, 0, 0, null);
+
+                int currentFPS = getFPS();
+                if (currentFPS != -1) {
+                    g.setColor(Color.WHITE);
+                    g.drawString("FPS: " + currentFPS, 10, 20);
+                }
+
+            }
+        };
+        panel.setPreferredSize(new Dimension(screenSize));
+        panel.setMinimumSize(new Dimension(WIDTH, HEIGHT));
+        panel.setMaximumSize(new Dimension(WIDTH_MAX, HEIGHT_MAX));
+        panel.setFocusable(true);
+        panel.addKeyListener(this);
+
+        add(panel);
+
+        setVisible(true);
+
+        // Main program loop
+        long lastLoopTime = System.nanoTime();
+        final int TARGET_FPS = 120;
+        final long OPTIMAL_TIME = 1000000000 / TARGET_FPS;
+
+        while (true) {
+            long now = System.nanoTime();
+            long updateLength = now - lastLoopTime;
+            lastLoopTime = now;
+
+            double delta = updateLength / ((double) OPTIMAL_TIME);
+
+            fpsCounter++;
+            if (System.currentTimeMillis() - lastFpsTime >= 1000) {
+                fps = fpsCounter;
+                fpsCounter = 0;
+                lastFpsTime = System.currentTimeMillis();
+            }
+
+            moveBlock(delta);
+            panel.repaint();
+
+            try {
+                Thread.sleep((lastLoopTime - System.nanoTime() + OPTIMAL_TIME) / 1000000);
+            } catch (InterruptedException e) {
+            }
+
+        }
+    }
+
+    private int getFPS() {
+        long currentTime = System.nanoTime();
+        if (lastFpsTime == 0) {
+            lastFpsTime = currentTime;
+        }
+        fps++;
+        if (currentTime - lastFpsTime >= 1000000000) {
+            int currentFPS = fps;
+            fps = 0;
+            lastFpsTime = currentTime;
+            return currentFPS;
+        }
+        return -1;
+    }
+
+    public void keyPressed(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+                dy = -5;
+                break;
+            case KeyEvent.VK_DOWN:
+                dy = 5;
+                break;
+            case KeyEvent.VK_LEFT:
+                dx = -5;
+                facingRight = false;
+                break;
+            case KeyEvent.VK_RIGHT:
+                dx = 5;
+                facingRight = true;
+                break;
+            case KeyEvent.VK_F11:
+                // toggleFullscreen();
+                break;
+            case KeyEvent.VK_ESCAPE:
+                // toggleMinimize();
+                break;
+            case KeyEvent.VK_SPACE:
+                // throwBall();
+        }
+    }
+
+    private void moveBlock(double delta) {
+        blockX += dx * delta;
+        blockY += dy * delta;
+
+        // Keep the block inside the panel
+        if (blockX < 0) {
+            blockX = 0;
+        }
+        if (blockX > getWidth() - BLOCK_SIZE) {
+            blockX = getWidth() - BLOCK_SIZE;
+        }
+        if (blockY < 0) {
+            blockY = 0;
+        }
+        if (blockY > getHeight() - BLOCK_SIZE) {
+            blockY = getHeight() - BLOCK_SIZE;
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        switch (e.getKeyCode()) {
+            case KeyEvent.VK_UP:
+            case KeyEvent.VK_DOWN:
+                dy = 0;
+                break;
+            case KeyEvent.VK_LEFT:
+            case KeyEvent.VK_RIGHT:
+                dx = 0;
+                break;
+        }
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        if (e.getKeyChar() == 'f') {
+        } else if (e.getKeyChar() == KeyEvent.VK_ESCAPE) {
+            setExtendedState(JFrame.NORMAL);
+            setSize(WIDTH_DEFAULT, HEIGHT_DEFAULT);
+            setLocationRelativeTo(null);
+        }
+    }
+
+    public static void main(String[] args) {
+        // Display display = new Display(1920, 1080);
+        // new Thread (new GameLoop()).start();
+        new Football();
+    }
+
+}

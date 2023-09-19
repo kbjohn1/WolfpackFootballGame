@@ -1,0 +1,19 @@
+            backgroundImage = ImageIO.read(new File("graphics/rsz_carterFinley.png"));
+            playerRightImage = ImageIO.read(new File("graphics/rsz_playerRight.png"));
+            playerLeftImage = ImageIO.read(new File("graphics/rsz_playerLeft.png"));
+            
+
+
+            There are a few things that still need to be implemented to make the Football game fully functional:
+
+Add support for keyboard input: The actionPerformed() method currently handles user input for the right and left arrow keys, but this method needs to be registered with the JFrame so that it can receive keyboard input events. This can be done by calling addKeyListener(this) in the Football constructor.
+
+Implement bounds checking: The player's position should be checked against the boundaries of the screen to prevent it from moving off the screen. This can be done by adding conditional statements in the run() method to check if the player's x and y coordinates are within the screen bounds.
+
+Implement collision detection: If the game involves obstacles or other objects, collision detection needs to be implemented to detect when the player collides with these objects. This can be done by adding conditional statements in the run() method to check if the player's position intersects with the bounds of the obstacle objects.
+
+Implement gravity and jumping: If the game involves jumping or gravity, these features need to be implemented in the run() method by changing the player's y coordinate based on gravity and user input.
+
+Add scoring and game over logic: If the game involves scoring or a game over condition, these features need to be implemented in the run() method by updating a score variable and checking for the game over condition.
+
+Optimize image scaling: Currently, the images are scaled using the getWidth() and getHeight() methods, which can cause performance issues. A better approach is to create scaled versions of the images at runtime using the Image.getScaledInstance() method and store these scaled images in separate variables.

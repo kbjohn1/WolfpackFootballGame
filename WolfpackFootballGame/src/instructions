@@ -1,0 +1,16 @@
+INSTRUCTIONS
+
+compile Football.java
+run Football.java
+
+use WASD or arrow keys to navigate the football player to collect as many 
+footballs as possible.
+
+each football collected is +10 points.
+each UNC logo collected is -10 points.
+
+every 5 footballs collected increases speed.
+running into a UNC logo decreseases speed.
+
+after 60 secs score will be reported.
+hit esc to exit the game.
